@@ -3,22 +3,25 @@ nocomment is a tool to remove comments of code, it support /**/, //, #, \<!-- --
 
 ## Usage
 ```go
+package main
+
 import (
 	"fmt"
+
 	"github.com/Greyh4t/nocomment"
 )
 
-func main(){
+func main() {
 	s := &nocomment.Stripper{}
-	// // Keep C style comments (/* */).
-	// s.KeepCComments = true
-	// // Keep C++ style comments (//).
-	// s.KeepCPPComments = true
-	// // Keep Shell style comments (#).
-	// s.KeepShellComments = true
-	// // Keep HTML style comments (<!-- -->)
-	// s.KeepHtmlComments = true
-	
+	// remove /* */
+	s.RemoveBlockComment = true
+	// remove //
+	s.RemoveLineComment = true
+	// remove #
+	s.RemoveShellComment = true
+	// remove <!-- -->
+	s.RemoveHtmlComment = true
+
 	fmt.Println(string(s.Clean([]byte(""))))
 	fmt.Println(string(s.Clean([]byte("hello world"))))
 	fmt.Println(string(s.Clean([]byte("//this is a comment\nHello World\n"))))

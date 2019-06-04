@@ -17,14 +17,14 @@ const (
 )
 
 type Stripper struct {
-	// 保留 /* */ 风格的注释
-	KeepCComments bool
-	// 保留 // 风格的注释
-	KeepCPPComments bool
-	// 保留 # 风格的注释
-	KeepShellComments bool
-	// 保留 <!-- --> 风格的注释
-	KeepHtmlComments bool
+	// 删除 /* */ 风格的注释
+	RemoveBlockComment bool
+	// 删除 // 风格的注释
+	RemoveLineComment bool
+	// 删除 # 风格的注释
+	RemoveShellComment bool
+	// 删除 <!-- --> 风格的注释
+	RemoveHtmlComment bool
 }
 
 func (stripper *Stripper) Clean(input []byte) []byte {
@@ -41,27 +41,27 @@ func (stripper *Stripper) Clean(input []byte) []byte {
 				index := i + 1
 				if index < len(input) {
 					// //
-					if !stripper.KeepCPPComments && input[index] == '/' {
+					if stripper.RemoveLineComment && input[index] == '/' {
 						state = COMMENTS_SINGLELINE
 						i += 1
 						continue
 					}
 					// /*
-					if !stripper.KeepCComments && input[index] == '*' {
+					if stripper.RemoveBlockComment && input[index] == '*' {
 						state = COMMENTS_MULTILINE
 						i += 1
 						continue
 					}
 				}
 			case '#':
-				if !stripper.KeepShellComments {
+				if stripper.RemoveShellComment {
 					state = COMMENTS_SINGLELINE
 					continue
 				}
 			case '<':
 				// <!--
 				if i < len(input)-3 {
-					if !stripper.KeepHtmlComments {
+					if stripper.RemoveHtmlComment {
 						if input[i+1] == '!' && input[i+2] == '-' && input[i+3] == '-' {
 							state = COMMENTS_HTML
 							i += 3
