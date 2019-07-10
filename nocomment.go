@@ -80,9 +80,11 @@ func (stripper *Stripper) Clean(input []byte) []byte {
 			// */
 			if b == '*' {
 				index := i + 1
-				if input[index] == '/' {
-					state = CODE
-					i += 1
+				if index < len(input) {
+					if input[index] == '/' {
+						state = CODE
+						i += 1
+					}
 				}
 			}
 		case COMMENTS_SINGLELINE:
