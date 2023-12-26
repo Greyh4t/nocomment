@@ -25,6 +25,8 @@ type Stripper struct {
 	RemoveShellComment bool
 	// 删除 <!-- --> 风格的注释
 	RemoveHtmlComment bool
+	// 删除 -- 风格的注释
+	RemoveSQLComment bool
 }
 
 func (stripper *Stripper) Clean(input []byte) []byte {
@@ -49,6 +51,16 @@ func (stripper *Stripper) Clean(input []byte) []byte {
 					// /*
 					if stripper.RemoveBlockComment && input[index] == '*' {
 						state = COMMENTS_MULTILINE
+						i += 1
+						continue
+					}
+				}
+			case '-':
+				index := i + 1
+				if index < len(input) {
+					// --
+					if stripper.RemoveSQLComment && input[index] == '-' {
+						state = COMMENTS_SINGLELINE
 						i += 1
 						continue
 					}
@@ -90,7 +102,7 @@ func (stripper *Stripper) Clean(input []byte) []byte {
 		case COMMENTS_SINGLELINE:
 			if b == '\\' {
 				state = BACKSLASH
-			} else if b == '\n' {
+			} else if b == '\n' || b == '\r' {
 				out.WriteByte(b)
 				state = CODE
 			}
