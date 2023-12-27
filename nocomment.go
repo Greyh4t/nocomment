@@ -56,13 +56,22 @@ func (stripper *Stripper) Clean(input []byte) []byte {
 					}
 				}
 			case '-':
-				index := i + 1
-				if index < len(input) {
+				if i+2 < len(input) {
 					// --
-					if stripper.RemoveSQLComment && input[index] == '-' {
-						state = COMMENTS_SINGLELINE
-						i += 1
-						continue
+					if stripper.RemoveSQLComment && input[i+1] == '-' {
+						if input[i+2] == ' ' || input[i+2] == '\t' || input[i+2] == '\n' {
+							state = COMMENTS_SINGLELINE
+							i += 2
+							continue
+						}
+						if input[i+2] == '\r' {
+							state = COMMENTS_SINGLELINE
+							i += 2
+							if i+1 < len(input) && input[i+1] == '\n' {
+								i += 1
+							}
+							continue
+						}
 					}
 				}
 			case '#':
