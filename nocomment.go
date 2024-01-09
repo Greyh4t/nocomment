@@ -5,15 +5,17 @@ import (
 )
 
 const (
-	CODE                   = iota // 正常代码
-	COMMENTS_MULTILINE            // 多行注释
-	COMMENTS_SINGLELINE           // 单行注释
-	COMMENTS_HTML                 // HTML注释
-	BACKSLASH                     // 折行注释
-	CODE_CHAR                     // 字符
-	CHAR_ESCAPE_SEQUENCE          // 字符中的转义字符
-	CODE_STRING                   // 字符串
-	STRING_ESCAPE_SEQUENCE        // 字符串中的转义字符
+	CODE                                = iota // 正常代码
+	COMMENTS_MULTILINE                         // 多行注释
+	COMMENTS_SINGLELINE                        // 单行注释
+	COMMENTS_HTML                              // HTML注释
+	BACKSLASH                                  // 折行注释
+	SINGLEQUOTE_STRING                         // 单引号字符串
+	SINGLEQUOTE_STRING_ESCAPE_SEQUENCE         // 单引号字符串中的转义字符
+	DOUBLEQUOTES_STRING                        // 双引号字符串
+	DOUBLEQUOTES_STRING_ESCAPE_SEQUENCE        // 双引号字符串中的转义字符
+	BACKTICK_STRING                            // 反引号字符串
+	BACKTICK_STRING_ESCAPE_SEQUENCE            // 反引号字符串中的转义字符
 )
 
 type Stripper struct {
@@ -91,9 +93,11 @@ func (stripper *Stripper) Clean(input []byte) []byte {
 					}
 				}
 			case '\'':
-				state = CODE_CHAR
+				state = SINGLEQUOTE_STRING
 			case '"':
-				state = CODE_STRING
+				state = DOUBLEQUOTES_STRING
+			case '`':
+				state = BACKTICK_STRING
 			}
 
 			out.WriteByte(b)
@@ -129,26 +133,38 @@ func (stripper *Stripper) Clean(input []byte) []byte {
 			if b != '\\' && b != '\n' && b != '\r' {
 				state = COMMENTS_SINGLELINE
 			}
-		case CODE_CHAR:
+		case SINGLEQUOTE_STRING:
 			out.WriteByte(b)
 			if b == '\\' {
-				state = CHAR_ESCAPE_SEQUENCE
+				state = SINGLEQUOTE_STRING_ESCAPE_SEQUENCE
 			} else if b == '\'' {
 				state = CODE
 			}
-		case CHAR_ESCAPE_SEQUENCE:
+		case SINGLEQUOTE_STRING_ESCAPE_SEQUENCE:
 			out.WriteByte(b)
-			state = CODE_CHAR
-		case CODE_STRING:
+			state = SINGLEQUOTE_STRING
+		case DOUBLEQUOTES_STRING:
 			out.WriteByte(b)
 			if b == '\\' {
-				state = STRING_ESCAPE_SEQUENCE
+				state = DOUBLEQUOTES_STRING_ESCAPE_SEQUENCE
 			} else if b == '"' {
 				state = CODE
 			}
-		case STRING_ESCAPE_SEQUENCE:
+		case DOUBLEQUOTES_STRING_ESCAPE_SEQUENCE:
 			out.WriteByte(b)
-			state = CODE_STRING
+			state = DOUBLEQUOTES_STRING
+		case BACKTICK_STRING:
+			out.WriteByte(b)
+			if b == '`' {
+				state = BACKTICK_STRING_ESCAPE_SEQUENCE
+			}
+		case BACKTICK_STRING_ESCAPE_SEQUENCE:
+			out.WriteByte(b)
+			if b == '`' {
+				state = BACKTICK_STRING
+			} else {
+				state = CODE
+			}
 		}
 	}
 
